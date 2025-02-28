@@ -28,7 +28,7 @@ export default function Document(): JSX.Element {
         <meta name="author" content="Benoit Bellegarde" />
         <meta
           name="keywords"
-          content="Ultimate, Tab, scrapped, guitar, ads, free"
+          content="Ultimate, Tab, scraped, guitar, ads, free"
         />
         <meta
           name="description"

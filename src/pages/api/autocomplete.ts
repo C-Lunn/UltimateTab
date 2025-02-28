@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { AutocompleteScrapped } from '../../types/tabs'
+import { Autocompletescraped } from '../../types/tabs'
 
 export default async function handlerAC(
   req: NextApiRequest,
@@ -9,12 +9,11 @@ export default async function handlerAC(
   if (searchValue) {
     const firstWord: string = searchValue.toLowerCase().split(' ')[0]
     const scrapAc = await fetch(
-      `https://www.ultimate-guitar.com/static/article/suggestions/${
-        firstWord[0]
+      `https://www.ultimate-guitar.com/static/article/suggestions/${firstWord[0]
       }/${firstWord.substring(0, 5)}.js`,
     )
     try {
-      const resultAc: AutocompleteScrapped = await scrapAc.json()
+      const resultAc: Autocompletescraped = await scrapAc.json()
       if (resultAc.suggestions) {
         const filteredSuggestions = resultAc.suggestions.filter((value) =>
           value.includes(searchValue.toLowerCase()),

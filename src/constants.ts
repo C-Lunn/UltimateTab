@@ -64,3 +64,10 @@ export const TAB_SOURCES = {
   Artist: 'artist_name',
   Song: 'song_name',
 }
+
+export const TAB_SORT_TYPES = {
+  Default: 'default',
+  Artist: 'artist',
+  Song: 'name',
+  "Date Added": 'date_added',
+}

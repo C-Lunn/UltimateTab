@@ -51,9 +51,10 @@ export interface Tab {
   htmlTab?: string
   versions?: Tab[]
   chordsDiagrams?: UGChordCollection[]
+  date_added?: Date
 }
 
-export interface TabScrapped {
+export interface Tabscraped {
   marketing_type: string
   tab_url: string
   artist_name: string
@@ -98,7 +99,7 @@ export interface VexchordsOptions {
   }[]
 }
 
-export interface AutocompleteScrapped {
+export interface Autocompletescraped {
   suggestions: string[]
 }
 

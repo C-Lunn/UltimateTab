@@ -9,10 +9,10 @@ export const extendedTheme = extendTheme({
     global: (props: StyleFunctionProps) => ({
       'span.js-chord-chord': {
         cursor: 'pointer',
-        color: 'twitter.600 !important',
+        color: 'twitter.500 !important',
         fontWeight: 'bold',
         background:
-          props.colorMode === 'dark' ? 'rgba(226, 232, 240, 0.16)' : '#EDF2F7',
+          props.colorMode === 'dark' ? '#313131' : '#EDF2F7',
         padding: '0.01rem 0.15rem',
       },
       'pre, code': {
@@ -25,9 +25,9 @@ export const extendedTheme = extendTheme({
         bgColor: props.colorMode === 'dark' && 'twitter.600 !important',
       },
       '.rswp_progress,.rswp_duration,._ControlsButtonsRSWP,._VolumeInlineRSWP,._DevicesRSWP button,._ContentRSWP a':
-        {
-          color: props.colorMode === 'dark' && 'gray.300  !important',
-        },
+      {
+        color: props.colorMode === 'dark' && 'gray.300  !important',
+      },
       '._ContentWrapperRSWP path': {
         fill: props.colorMode === 'dark' && 'gray.300  !important',
       },

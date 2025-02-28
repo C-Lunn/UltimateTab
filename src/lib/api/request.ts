@@ -5,7 +5,7 @@ import type {
   ApiArgsSearch,
   ApiResponseSearch,
   Tab,
-  TabScrapped,
+  Tabscraped,
   PuppeteerOptions,
 } from '../../types/tabs'
 import { Page, Browser } from 'puppeteer'
@@ -167,9 +167,9 @@ export async function getPuppeteerConf(
   page.setViewport(
     options.widthBrowser && options.heightBrowser
       ? {
-          width: parseInt(options.widthBrowser) - 50,
-          height: parseInt(options.heightBrowser),
-        }
+        width: parseInt(options.widthBrowser) - 50,
+        height: parseInt(options.heightBrowser),
+      }
       : null,
   )
   // Block every ressources that we don't need to load

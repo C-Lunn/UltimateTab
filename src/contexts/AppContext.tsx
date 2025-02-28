@@ -51,7 +51,7 @@ export function AppStateProvider({ children }) {
     Object.values(TAB_SOURCES).join(','),
   )
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [favorites, setFavorites] = useLocalStorage<Tab[]>('favoriteTabs', [])
+  const [favourites, setFavorites] = useLocalStorage<Tab[]>('favoriteTabs', [])
   const [favoriteActive, setFavoriteActive] = useState<boolean>(false)
   const [selectedTab, setSelectedTab] = useState<Tab>({
     url: '',
@@ -70,12 +70,12 @@ export function AppStateProvider({ children }) {
     isLoading: isLoadingTab,
     data: selectedTabContent,
     refetch: refetchTab,
-  } = useTabs(selectedTab.url, tabFontSize, widthBrowser)
+  } = useTabs(selectedTab.url, tabFontSize, widthBrowser, favourites)
 
   const {
     isLoading: isLoadingTabBackground,
     data: selectedTabContentBackground,
-  } = useBackgroundTabs(selectedTab.url, tabFontSize, widthBrowser)
+  } = useBackgroundTabs(selectedTab.url, tabFontSize, widthBrowser, favourites)
 
   const {
     isLoading: isLoadingTabList,
@@ -90,13 +90,14 @@ export function AppStateProvider({ children }) {
   )
 
   const handleClickFavorite: MouseEventHandler<HTMLButtonElement> = () => {
-    const indexEntry = favorites.findIndex((el) => el.url === selectedTab.url)
-    let newFavorites = favorites
+    const indexEntry = favourites.findIndex((el) => el.url === selectedTab.url)
+    let newFavorites = favourites
     let isAdded: boolean
     if (indexEntry !== -1) {
       newFavorites.splice(indexEntry, 1)
       isAdded = false
     } else {
+      selectedTabContent.date_added = new Date();
       newFavorites.push(selectedTabContent)
       isAdded = true
     }
@@ -122,7 +123,7 @@ export function AppStateProvider({ children }) {
         setSearchSource,
         currentPage,
         setCurrentPage,
-        favorites,
+        favorites: favourites,
         setFavorites,
         selectedTab,
         setSelectedTab,

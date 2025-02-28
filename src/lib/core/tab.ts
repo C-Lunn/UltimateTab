@@ -3,14 +3,17 @@ import {
   Tab,
   Pagination,
   ApiResponseTab,
-  TabScrapped,
+  Tabscraped,
   UGChordCollection,
   ApiArgsSearch,
 } from './../../types/tabs'
 import { TAB_TYPES_VALUES } from '../../constants'
 import { ApiResponseSearch } from '../../types/tabs'
-import { getPuppeteerConf } from '../api/request'
+import { encodeParams, getPuppeteerConf } from '../api/request'
 import sanitizeHtml from 'sanitize-html'
+import * as htmlparser2 from "htmlparser2";
+import * as nhp from "node-html-parser";
+import { prepend } from 'cheerio/dist/commonjs/api/manipulation'
 
 export function validateType(type: string): string {
   if (type in TAB_TYPES_VALUES) {
@@ -24,7 +27,7 @@ export function validateType(type: string): string {
   }
 }
 
-export async function getTabsList(
+export async function getTabsList_old(
   url: string,
   args: ApiArgsSearch,
 ): Promise<ApiResponseSearch> {
@@ -38,7 +41,7 @@ export async function getTabsList(
     const tabsParsed: ApiResponseSearch = await page.evaluate(
       ({ source, q }) => {
         const data = window.UGAPP.store.page.data
-        let results: TabScrapped[] = [
+        let results: Tabscraped[] = [
           ...(data?.other_tabs || []),
           ...(data?.results || []),
         ]
@@ -86,8 +89,8 @@ export async function getTabsList(
               result.type === 'Ukulele Chords'
                 ? 'Ukulele'
                 : result.type === 'Bass Tabs'
-                ? 'Bass'
-                : result.type,
+                  ? 'Bass'
+                  : result.type,
           }))
 
         const response: ApiResponseSearch = { results: tabs, pagination }
@@ -104,7 +107,53 @@ export async function getTabsList(
   }
 }
 
-export async function getTab(
+export async function getTabsList(
+  url: string,
+  args: ApiArgsSearch,
+): Promise<ApiResponseSearch> {
+  const resultsPage = await fetch("https://ug.calluml.xyz/ugroot/search.php?" + encodeParams(args));
+  const bod = await resultsPage.text();
+  // parse html
+  const doc = htmlparser2.parseDocument(bod);
+  // get js-store and un-html
+  const jsStore = htmlparser2.DomUtils.findOne((elem) => elem.attribs.class === 'js-store', doc.children);
+  const data: any = JSON.parse(jsStore.attribs["data-content"])["store"]["page"]["data"]
+  const jss: Tabscraped[] = data["results"];
+  const ret: ApiResponseSearch = {
+    results: [],
+    pagination: {
+      current: data.pagination.current,
+      total: data.pagination.total,
+    }
+  };
+  for (const res of jss) {
+    try {
+      ret.results.push({
+        artist: res["artist_name"],
+        name: res["song_name"],
+        url: res["tab_url"],
+        slug:
+          res.tab_url.split('/').length === 5
+            ? res.tab_url.split('/').splice(-1).join('/')
+            : res.tab_url.split('/').splice(-2).join('/'),
+        rating: parseFloat(res.rating.toFixed(2)),
+        numberRates: res.votes,
+        type:
+          res.type === 'Ukulele Chords'
+            ? 'Ukulele'
+            : res.type === 'Bass Tabs'
+              ? 'Bass'
+              : res.type,
+      } as Tab);
+    } catch (e) {
+      continue;
+    }
+
+  }
+  return ret;
+}
+
+export async function getTab_old(
   url: string,
   width?: string,
   height?: string,
@@ -127,7 +176,7 @@ export async function getTab(
           rating,
           votes,
           type,
-        }: TabScrapped = window.UGAPP.store.page.data.tab
+        }: Tabscraped = window.UGAPP.store.page.data.tab
         const tuning: string[] = tab_view?.meta?.tuning?.value?.split(' ') || [
           'E',
           'A',
@@ -141,20 +190,20 @@ export async function getTab(
         const capo: string = tab_view?.meta?.capo || 'no capo'
         const raw_tabs: string = tab_view?.wiki_tab?.content || ''
         const chordsDiagrams: UGChordCollection[] = tab_view?.applicature || []
-        const versions: TabScrapped[] =
+        const versions: Tabscraped[] =
           tab_view?.versions.filter(
-            (tab: TabScrapped) => tab.type !== 'Official',
+            (tab: Tabscraped) => tab.type !== 'Official',
           ) || []
-        let versionsFormatted: Tab[] = versions.map((tabScrapped) => {
+        let versionsFormatted: Tab[] = versions.map((tabscraped) => {
           return {
-            artist: tabScrapped.artist_name,
-            name: tabScrapped.song_name,
-            url: tabScrapped.tab_url,
-            difficulty: tabScrapped.difficulty,
-            numberRates: tabScrapped.votes,
-            type: tabScrapped.type,
-            slug: tabScrapped.tab_url.split('/').splice(-2).join('/'),
-            rating: parseFloat(tabScrapped.rating.toFixed(2)),
+            artist: tabscraped.artist_name,
+            name: tabscraped.song_name,
+            url: tabscraped.tab_url,
+            difficulty: tabscraped.difficulty,
+            numberRates: tabscraped.votes,
+            type: tabscraped.type,
+            slug: tabscraped.tab_url.split('/').splice(-2).join('/'),
+            rating: parseFloat(tabscraped.rating.toFixed(2)),
           }
         })
 
@@ -198,12 +247,12 @@ export async function getTab(
       heightBrowser: height,
     })
     try {
-      //Scrapping as a mobile to get responsive tab content
+      //scraping as a mobile to get responsive tab content
       //We cannot scrap everything directly as a mobile because a lot of infos are missing in mobile view in the window UGAPP variable (versions,votes,etc...)
       //Replacing Linux word in userAgent because there's an issue with UG when having a Linux userAgent, returning an error page
       await page.setUserAgent(
         (await browser.userAgent()).replace('Linux', 'Windows') +
-          ' Mobile Safari iPhone',
+        ' Mobile Safari iPhone',
       )
       await page.goto(url, { waitUntil: 'domcontentloaded' })
       // wait for selector if Cloudflare bot detection page need to be bypass first
@@ -238,4 +287,128 @@ export async function getTab(
   tabParsed.tabInfos.htmlTab = tabResponsive?.htmlTab
   const { access_token } = await getSpotifyAccessToken()
   return { tab: tabParsed.tabInfos, spotify_access_token: access_token }
+}
+
+export async function getTab(
+  url: string,
+  width?: string,
+  height?: string,
+): Promise<ApiResponseTab> {
+  const getTabinfo = async () => {
+    try {
+      const pg = await fetch(url);
+      // wait for selector if Cloudflare bot detection page need to be bypass first
+      const bod = await pg.text();
+      // parse html
+      const doc = htmlparser2.parseDocument(bod);
+      // get js-store and un-html
+      const jsStore = htmlparser2.DomUtils.findOne((elem) => elem.attribs.class === 'js-store', doc.children);
+      const data: any = JSON.parse(jsStore.attribs["data-content"])["store"]["page"]["data"]
+      const { tab_view } = data
+      const {
+        tab_url,
+        artist_name,
+        song_name,
+        rating,
+        votes,
+        type,
+      }: Tabscraped = data.tab
+      const tuning: string[] = tab_view?.meta?.tuning?.value?.split(' ') || [
+        'E',
+        'A',
+        'D',
+        'G',
+        'B',
+        'E',
+      ]
+      const difficulty: string = tab_view?.ug_difficulty || 'unknown'
+      const tonality: string = tab_view?.meta?.tonality || 'unknown'
+      const capo: string = tab_view?.meta?.capo || 'no capo'
+      const raw_tabs: string = tab_view?.wiki_tab?.content || ''
+      const chordsDiagrams: UGChordCollection[] = tab_view?.applicature || []
+      const versions: Tabscraped[] =
+        tab_view?.versions.filter(
+          (tab: Tabscraped) => tab.type !== 'Official',
+        ) || []
+      let versionsFormatted: Tab[] = versions.map((tabscraped) => {
+        return {
+          artist: tabscraped.artist_name,
+          name: tabscraped.song_name,
+          url: tabscraped.tab_url,
+          difficulty: tabscraped.difficulty,
+          numberRates: tabscraped.votes,
+          type: tabscraped.type,
+          slug: tabscraped.tab_url.split('/').splice(-2).join('/'),
+          rating: parseFloat(tabscraped.rating.toFixed(2)),
+        }
+      })
+
+      if (Array.isArray(versionsFormatted)) {
+        versionsFormatted = versionsFormatted.sort(function (elem1, elem2) {
+          return (
+            elem2.rating * elem2.numberRates -
+            elem1.rating * elem1.numberRates
+          )
+        })
+      }
+
+      const tabParsed = {
+        artist: artist_name,
+        name: song_name,
+        url: tab_url,
+        difficulty,
+        tuning,
+        tonality,
+        capo,
+        raw_tabs,
+        numberRates: votes,
+        type: type,
+        slug: tab_url.split('/').splice(-2).join('/'),
+        rating: parseFloat(rating.toFixed(2)),
+        versions: versionsFormatted,
+        chordsDiagrams,
+
+      }
+      // await browser.close()
+      return { tabInfo: tabParsed }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const getResponsiveTab = async () => {
+    try {
+      //scraping as a mobile to get responsive tab content
+      //We cannot scrap everything directly as a mobile because a lot of infos are missing in mobile view in the window UGAPP variable (versions,votes,etc...)
+      //Replacing Linux word in userAgent because there's an issue with UG when having a Linux userAgent, returning an error page
+      const page = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1',
+        }
+      })
+      const bod = await page.text();
+      // get js-store and un-html
+      const doc = nhp.parse(bod);
+      const pre = doc.querySelector('pre').outerHTML;
+
+      return {
+        htmlTab: sanitizeHtml(pre, {
+          allowedAttributes: {
+            span: ['class'],
+          },
+        }),
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  const [tabParsed, tabResponsive] = await Promise.all([
+    getTabinfo(),
+    getResponsiveTab(),
+  ])
+
+
+  tabParsed.tabInfo["htmlTab"] = tabResponsive?.htmlTab
+  const { access_token } = await getSpotifyAccessToken()
+  return { tab: tabParsed.tabInfo, spotify_access_token: access_token }
 }
