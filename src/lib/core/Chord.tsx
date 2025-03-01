@@ -61,13 +61,17 @@ export class TabChord {
         return from_note_index(negative_modulo(this.base_note + transpose, 12), use_flat) + this.extension;
     }
 
+    public static fromNextObj(obj: any): TabChord {
+        return new TabChord(obj.base_note, obj.extension);
+    }
+
 }
 
 
-const Chord = (params: { chord: TabChord, transpose: number, use_flat: boolean }) => {
+const Chord = (params: { chord: TabChord, transpose: number, use_flat: boolean }): JSX.Element => {
     return (
-        <span>
-        { params.chord.toString(params.transpose, params.use_flat) }
+        <span className="tabContent-chord js-chord-chord">
+            {params.chord.toString(params.transpose, params.use_flat)}
         </span>
     );
 }

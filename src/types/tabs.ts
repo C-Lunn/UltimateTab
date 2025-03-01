@@ -1,3 +1,5 @@
+import { TabSheet } from "../lib/core/TabSheet"
+
 export interface ApiArgsSearch {
   q: string
   type?: string | string[]
@@ -52,6 +54,7 @@ export interface Tab {
   versions?: Tab[]
   chordsDiagrams?: UGChordCollection[]
   date_added?: Date
+  sheet?: TabSheet;
 }
 
 export interface Tabscraped {

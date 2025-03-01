@@ -62,7 +62,7 @@ export function AppStateProvider({ children }) {
     rating: 0,
     type: 'Tab',
   })
-  const [tabFontSize, setTabFontSize] = useState<number>(100)
+  const [tabFontSize, setTabFontSize] = useState<number>(130)
   const [widthBrowser, heightBrowser] = useWindowSize()
 
   const toast = useToast()

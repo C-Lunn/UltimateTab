@@ -53,6 +53,16 @@ export const extendedTheme = extendTheme({
       'input:focus': {
         animation: 'blink_input_opacity_to_prevent_scrolling_when_focus 0.01s',
       },
+
+      /* Style odd and even sections */
+      '.tabrender-section:nth-of-type(odd)': {
+        background: props.colorMode === 'dark' ? 'rgb(26, 32, 44)' : '#EDF2F7',
+      },
+      '.tabrender-section:nth-of-type(even)': {
+        background: props.colorMode === 'dark' ? 'rgb(32, 38, 49)' : '#EDF2F7',
+      },
+
+
     }),
   },
   fonts: {

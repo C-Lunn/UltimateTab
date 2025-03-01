@@ -71,3 +71,7 @@ export const TAB_SORT_TYPES = {
   Song: 'name',
   "Date Added": 'date_added',
 }
+
+export const USE_PUPPETEER = process.env.NEXT_PUBLIC_USE_PUPPETEER === 'true'
+export const UG_BASE_URL = process.env.NEXT_PUBLIC_UG_BASE_URL;
+export const UG_TABS_URL = process.env.NEXT_PUBLIC_UG_TABS_URL;

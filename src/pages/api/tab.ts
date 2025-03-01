@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import type { ApiRequestTab } from '../../types/tabs'
-import { getTab } from '../../lib/core/tab'
+import type { ApiRequestTab, ApiResponseTab } from '../../types/tabs'
+import { PuppeteerTabGetter, FetchTabGetter } from '../../lib/core/tab'
+import { USE_PUPPETEER, UG_BASE_URL } from '../../constants'
 
 export default async function handlerTab(
   req: NextApiRequest,
@@ -12,11 +13,13 @@ export default async function handlerTab(
     height: req.query.height as string,
   }
   if (formattedReq.url) {
-    let tabs = await getTab(
-      formattedReq.url,
-      formattedReq.width,
-      formattedReq.height,
-    )
+    let tabs: ApiResponseTab;
+    if (USE_PUPPETEER) {
+      tabs = await new PuppeteerTabGetter().getTab(formattedReq.url, formattedReq.width, formattedReq.height)
+    }
+    else {
+      tabs = await new FetchTabGetter(UG_BASE_URL).getTab(formattedReq.url, formattedReq.width, formattedReq.height)
+    }
     if (tabs) {
       res.status(200).json(tabs)
     } else {

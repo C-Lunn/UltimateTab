@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { UG_TABS_URL } from '../../constants'
 
 export default async function handlerTranspose(
   req: NextApiRequest,
@@ -15,10 +16,10 @@ export default async function handlerTranspose(
 
     const transposedChords = await fetch(
       `
-        https://tabs.ultimate-guitar.com/tab/applicature/transpose?${queryTransposeUG.toString()}`,
+        ${UG_TABS_URL}/tab/applicature/transpose?${queryTransposeUG.toString()}`,
       {
         headers: {
-          Referer: 'https://tabs.ultimate-guitar.com/',
+          Referer: UG_TABS_URL,
           Accept: 'application/json',
         },
       },

@@ -1,5 +1,5 @@
 import { underscore } from '../utils/string'
-import { validateType, getTabsList } from '../core/tab'
+import { validateType, FetchTabGetter, PuppeteerTabGetter } from '../core/tab'
 import type {
   ApiRequestSearch,
   ApiArgsSearch,
@@ -13,14 +13,17 @@ import { connect } from '../../../node_modules/puppeteer-real-browser/src/index.
 import {
   PUPPETEER_BLOCK_RESSOURCE_NAME,
   PUPPETEER_BLOCK_RESSOURCE_TYPE,
+  USE_PUPPETEER,
+  UG_BASE_URL
 } from '../../constants'
 
 export async function search(args: ApiArgsSearch): Promise<ApiResponseSearch> {
   args = formatSearchQuery(args)
-  const url = 'http://www.ultimate-guitar.com/search.php?' + encodeParams(args)
-  console.log(url)
-  const tabs = await getTabsList(url, args)
-  return tabs
+  const url = `${UG_BASE_URL}/search.php?` + encodeParams(args)
+  if (USE_PUPPETEER) {
+    return new PuppeteerTabGetter().getTabsList(url, args)
+  }
+  return new FetchTabGetter(UG_BASE_URL).getTabsList(url, args)
 }
 
 export function formatRequestSearch(uri: string): ApiRequestSearch {
@@ -172,7 +175,7 @@ export async function getPuppeteerConf(
       }
       : null,
   )
-  // Block every ressources that we don't need to load
+  // Block every resource that we don't need to load
   page.setDefaultNavigationTimeout(4000)
   await page.setRequestInterception(true)
   page.on('request', (request) => {

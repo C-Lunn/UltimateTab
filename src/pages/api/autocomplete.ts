@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { UG_BASE_URL } from '../../constants'
 import { Autocompletescraped } from '../../types/tabs'
 
 export default async function handlerAC(
@@ -9,7 +10,7 @@ export default async function handlerAC(
   if (searchValue) {
     const firstWord: string = searchValue.toLowerCase().split(' ')[0]
     const scrapAc = await fetch(
-      `https://www.ultimate-guitar.com/static/article/suggestions/${firstWord[0]
+      `${UG_BASE_URL}/static/article/suggestions/${firstWord[0]
       }/${firstWord.substring(0, 5)}.js`,
     )
     try {
