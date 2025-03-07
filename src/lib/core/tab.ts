@@ -243,6 +243,7 @@ export class FetchTabGetter implements TabGetter {
   ): Promise<ApiResponseTab> {
     const getTabinfo = async () => {
       try {
+        console.log(`Getting tab at ${url}`)
         const pg = await fetch(url);
         // wait for selector if Cloudflare bot detection page need to be bypass first
         const bod = await pg.text();

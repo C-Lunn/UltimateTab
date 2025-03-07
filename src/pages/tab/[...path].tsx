@@ -73,9 +73,9 @@ export default function TabPage(): JSX.Element {
   }, [])
 
   const last_scroll_el = useRef<HTMLElement>(null);
+  const EL_PAGE_BUFFER = 3;
 
-
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = async (e: KeyboardEvent) => {
     if (e.key === 'PageUp' || e.key === 'PageDown') {
       e.preventDefault();
       if (e.key === 'PageUp') {
@@ -85,20 +85,19 @@ export default function TabPage(): JSX.Element {
           const el = elements[i];
           let rect = el.getBoundingClientRect();
           if (rect.top > 0) {
-            // get the previous element and scroll to that
-            if (i < elements.length - 2) {
-              const nextEl = elements[i + 2];
-              rect = nextEl.getBoundingClientRect();
-              nextEl.scrollIntoView({ behavior: 'smooth', block: "end", inline: "nearest" });
-              // place a red triangle to the left of the element pointing at it
-              const elToHighlight = elements[i + 1];
-              if (last_scroll_el.current) {
-                last_scroll_el.current.style.removeProperty("border-left");
-              }
-              last_scroll_el.current = elToHighlight as HTMLElement;
-              last_scroll_el.current.style.borderLeft = "5px solid red";
-
+            // place a red triangle to the left of the element pointing at it
+            const elToHighlight = elements[Math.min(i + EL_PAGE_BUFFER, elements.length - 1)];
+            if (last_scroll_el.current) {
+              last_scroll_el.current.style.removeProperty("border-left");
             }
+            last_scroll_el.current = elToHighlight as HTMLElement;
+            last_scroll_el.current.style.borderLeft = "5px solid red";
+            await new Promise((res) => setTimeout(res, 250))
+            // get the previous element and scroll to that
+            const nextEl = elements[Math.min(i + EL_PAGE_BUFFER + 1, elements.length - 1)];
+            rect = nextEl.getBoundingClientRect();
+            nextEl.scrollIntoView({ behavior: 'smooth', block: "end", inline: "nearest" });
+
             return;
           }
         }
@@ -109,19 +108,22 @@ export default function TabPage(): JSX.Element {
           const el = elements[i];
           let rect = el.getBoundingClientRect();
           if (rect.bottom > window.innerHeight) {
-            // get the previous element and scroll to that
-            if (i > 1) {
-              const prevEl = elements[i - 2];
-              rect = prevEl.getBoundingClientRect();
-              prevEl.scrollIntoView({ behavior: 'smooth' });
-              const elToHighlight = elements[i - 1];
-              if (last_scroll_el.current) {
-                last_scroll_el.current.style.removeProperty("border-left");
-              }
-              last_scroll_el.current = elToHighlight as HTMLElement;
-              last_scroll_el.current.style.borderLeft = "5px solid red";
-
+            let elToHighlight = elements[Math.max(0, i - EL_PAGE_BUFFER)];
+            while ((elToHighlight as HTMLElement).innerText === "\n" && i !== 0) {
+              console.log((elToHighlight as HTMLElement).innerText)
+              elToHighlight = elements[Math.max(0, --i - EL_PAGE_BUFFER)];
             }
+            if (last_scroll_el.current) {
+              last_scroll_el.current.style.removeProperty("border-left");
+            }
+            last_scroll_el.current = elToHighlight as HTMLElement;
+            last_scroll_el.current.style.borderLeft = "15px solid red";
+            // get the previous element and scroll to that
+            const prevEl = elements[Math.max(0, i - EL_PAGE_BUFFER - 1)];
+            rect = prevEl.getBoundingClientRect();
+            await new Promise((res) => setTimeout(res, 250))
+            prevEl.scrollIntoView({ behavior: 'smooth' });
+
             return;
           }
         }
